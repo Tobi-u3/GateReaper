@@ -1,19 +1,33 @@
 # GateReaper
 
-A runnable first version of GateReaper, Team Blue Lock's DevSecOps security scoring product. It combines SonarQube, TruffleHog and OWASP Dependency-Check reports into a unified findings dashboard and a deployment gate.
+GateReaper is an open-source DevSecOps security scoring workspace developed by **Team Blue Lock**. It brings SonarQube, TruffleHog, and OWASP Dependency-Check reports into one dashboard, turns findings into a transparent security score, and provides a policy-based gate for CI/CD pipelines.
 
-## Start on Kali, Linux or macOS
+The current release focuses on report ingestion, finding review, scoring, and deployment decisions. External scanners run on a trusted CI runner; GateReaper processes their results.
 
-Install Node.js 24 or newer and npm, extract this archive, then run:
+## Getting started
+
+### Requirements
+
+- Node.js 24 or newer and npm
+- Git
+- Internet access for the initial dependency installation
+- Docker and Docker Compose for the optional PostgreSQL/Redis deployment
+
+### Linux, Kali Linux, and macOS
+
+Clone the repository and start the application:
 
 ```bash
+git clone https://github.com/Tobi-u3/GateReaper.git
 cd GateReaper
 bash scripts/start.sh
 ```
 
 Open http://127.0.0.1:3000 and create your administrator account. Use a password of at least 15 characters. There are no default credentials. First setup should happen on your local machine before exposing the service. The first start downloads npm dependencies; an internet connection is required.
 
-On Windows, from the extracted `GateReaper` folder:
+### Windows
+
+Clone the repository, open a terminal in the `GateReaper` directory, and run:
 
 ```powershell
 npm ci
@@ -23,7 +37,7 @@ npm start
 
 SQLite stores local workspace data under `data/`. Restarting the application preserves accounts, repositories, reports, scores and audit events. Back up the data directory and protect it with filesystem permissions. JWT signing material is in the database; this version does not encrypt the database itself.
 
-## Try the product
+## Dashboard workflow
 
 1. Create the administrator account.
 2. Select **Explore sample data** for three explicitly labelled sample repositories.
@@ -35,14 +49,14 @@ SQLite stores local workspace data under `data/`. Restarting the application pre
 
 Sample data is illustrative. It cannot authorize deployments. Empty scanner reports must still be supplied; an incomplete scan never passes. The sample workspace is added once and does not overwrite your repositories.
 
-## What works
+## Features
 
 - React + TypeScript dashboard with responsive navigation and Lucide icons.
 - Express REST API; password hashing with scrypt; expiring JWT authentication; authenticated WebSocket update notifications.
 - Repository registration, immutable completed scans, filtered findings, exports, audit history and configurable per-repository policy.
-- Actual normalization and validation of scanner exports, including duplicate suppression within each report.
+- Normalization and validation of scanner exports, including duplicate suppression within each report.
 - Complete paginated Sonar export checks; TruffleHog raw credentials discarded before storage or queueing.
-- Exact capped score deductions and a fail-closed gate API.
+- Capped score deductions and a fail-closed gate API.
 - GitHub push webhooks with HMAC-SHA256 checks, repository matching, per-repository rate limits and delivery-ID replay protection.
 - Optional PostgreSQL persistence and Redis/BullMQ report-processing queue with three workers' worth of concurrency and three attempts using exponential backoff.
 - CI submission helper that exits nonzero when a release should be blocked.
@@ -74,7 +88,7 @@ Secrets are charged only under Secret to avoid double-counting. Health bands: Ex
 
 Historical score breakdowns retain the policy at scan time. The gate API reevaluates the findings against the repository's current threshold.
 
-## Use with your CI pipeline
+## CI/CD integration
 
 Run the actual scanners on your trusted runner; GateReaper does not execute uploaded code. SonarQube needs its server and analysis to finish before export. TruffleHog history scanning requires full Git history. Dependency-Check requires its vulnerability data and project dependencies. These external services are not bundled here.
 
@@ -107,12 +121,12 @@ The app is exposed only on 127.0.0.1:3000. PostgreSQL and Redis ports are not pu
 
 ## Scope and limitations
 
-This is a tested local MVP, not the entire enterprise platform described in the reports. It intentionally delivers the central report-normalization, scoring and gate workflow first.
+GateReaper currently provides an MVP of the report-normalization, scoring, and gate workflow. The following boundaries apply to this release:
 
 - Does not clone repositories, launch scanner containers, poll Sonar Compute Engine, run DAST/IaC scans, build artifacts, deploy or roll back releases.
 - GitHub push webhooks create waiting sessions; they do not start scans. GitLab and pull-request events are not implemented. A webhook-created session can receive reports directly via the API; the helper creates its own session.
 - Redis queues normalized report ingestion; it does not orchestrate three independent external scanner containers. Failed queue jobs are retained (up to 100), with an audit event; no separate dead-letter management UI.
-- PostgreSQL currently stores an application-state JSON snapshot in one table. It does not implement the report's normalized four-table schema, partitioning, or high-volume query scaling.
+- PostgreSQL currently stores an application-state JSON snapshot in one table. Partitioning and high-volume query scaling are not implemented.
 - Run only one application instance: the in-memory transaction lock and state snapshot do not support concurrent app replicas.
 - Single administrator account; no RBAC, team invitations, MFA, password reset, or independent CI service accounts. Signing out clears the browser token but does not revoke previously issued tokens.
 - Audit history is editable by the database operator and capped at 2,000 events; it is not a tamper-proof compliance ledger.
@@ -120,21 +134,30 @@ This is a tested local MVP, not the entire enterprise platform described in the 
 - Use a TLS reverse proxy, resource limits, managed secrets, backups and identity controls before any real shared deployment. Keep this service and its initial setup private.
 - Reports are limited to 8 MB per request (7 MB browser file limit). No pagination of stored scan history in this version.
 
-## Validation performed
+## Development and verification
 
-`npm run check`, `npm run build`, and `npm test` pass. Eight automated tests cover normalization, score caps, secret redaction, incomplete exports, authentication, report imports, immutable completed scans, pending gates, webhook signatures/replay handling, sample-data gate denial and restart persistence. The dashboard and detail page were exercised in a real headless Chromium browser at desktop and mobile widths. Screenshots are in `docs/`.
+Install dependencies and run the available checks:
 
-Docker, PostgreSQL, Redis and external scanners were not available for end-to-end validation here. Their configuration and adapters are supplied but need verification in your deployment environment.
+```bash
+npm ci
+npm run check
+npm run build
+npm test
+```
+
+The test suites cover report normalization, score caps, secret redaction, authentication, report imports, gate decisions, webhook handling, and persistence. API tests require permission to start a local server. Validate the scanner integrations and any PostgreSQL/Redis deployment in the intended environment.
+
+Dashboard screenshots are available in `docs/`.
 
 ## Technical references
 
 - BullMQ connections: https://docs.bullmq.io/guide/connections
 - SonarQube Web API: https://docs.sonarsource.com/sonarqube-server/extension-guide/web-api
 
-These are integration references. The uploaded GateReaper project reports define the scoring rules and product requirements implemented here.
+Additional endpoint documentation is available in [docs/API.md](docs/API.md).
 
-## Classification fix and updating an existing installation
+## Updating an existing installation
 
-Stop GateReaper, back up its `data/` directory, and replace application files with this release while retaining your existing `data/` and environment configuration. Run `npm ci`, `npm run build`, and `npm start`. Old completed scans with Sonar findings that lack classifications reopen awaiting the Sonar report; other scanner reports are retained. Import the original complete raw `sonar.json` into that session again. No new scan or fabricated clean report is needed.
+Stop GateReaper, back up its `data/` directory, and pull the latest release while retaining the existing `data/` directory and environment configuration. Run `npm ci`, `npm run build`, and `npm start`. Old completed scans with Sonar findings that lack classifications reopen awaiting the Sonar report; other scanner reports are retained. Import the original complete raw `sonar.json` into that session again. No new scan or fabricated clean report is needed.
 
 Findings keep classic normalized severity for deductions and preserve Sonar impact severities separately. Security impacts on code smells are included conservatively; lab findings are not automatically dismissed. Quality counts use security first, then reliability, then maintainability for issues with multiple impacts. This remains a threshold policy, not a claim of production safety.
