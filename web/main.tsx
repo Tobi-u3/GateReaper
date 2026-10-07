@@ -213,7 +213,7 @@ function App() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `blue-lock-${s.commit}.json`;
+    a.download = `gatereaper-${s.commit}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -246,7 +246,7 @@ function App() {
       <div className="login">
         <div className="login-story">
           <div className="brand">
-            <ShieldCheck /> BLUE LOCK
+            <ShieldCheck /> GateReaper
           </div>
           <span className="eyebrow">TEAM BLUE LOCK / DEVSECOPS</span>
           <h1>

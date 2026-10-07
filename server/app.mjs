@@ -420,7 +420,7 @@ app.get("/api/sessions/:id/gate", (req, res) => {
 app.get("/api/sessions/:id/export", (req, res) => {
   const s = state.sessions.find((s) => s.id === req.params.id);
   if (!s) return res.status(404).json({ error: "Session not found" });
-  res.attachment(`blue-lock-${s.id}.json`).json(safeSession(s));
+  res.attachment(`gatereaper-${s.id}.json`).json(safeSession(s));
 });
 app.post("/api/demo", async (_, res) => {
   await transaction(() => {
@@ -519,6 +519,6 @@ server.listen(
   process.env.HOST || "127.0.0.1",
   () =>
     console.log(
-      `Blue Lock ready at http://${process.env.HOST || "127.0.0.1"}:${process.env.PORT || 3000}`,
+      `GateReaper ready at http://${process.env.HOST || "127.0.0.1"}:${process.env.PORT || 3000}`,
     ),
 );
