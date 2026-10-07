@@ -1,0 +1,16 @@
+{
+  "dependencies": [
+    {
+      "fileName": "illustrative-library.jar",
+      "vulnerabilities": [
+        {
+          "name": "DEMO-DEPENDENCY-001",
+          "cvssv3": {
+            "baseScore": 9.1
+          },
+          "description": "Illustrative vulnerable dependency. This sample is not a real CVE assessment."
+        }
+      ]
+    }
+  ]
+}

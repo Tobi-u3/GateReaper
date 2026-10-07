@@ -1,0 +1,14 @@
+[
+  {
+    "DetectorName": "Example credential",
+    "SourceMetadata": {
+      "Data": {
+        "Git": {
+          "file": "config/example.env",
+          "line": 7
+        }
+      }
+    },
+    "Verified": false
+  }
+]

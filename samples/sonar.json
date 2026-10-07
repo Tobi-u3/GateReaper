@@ -1,0 +1,18 @@
+{
+  "issues": [
+    {
+      "severity": "CRITICAL",
+      "component": "src/api/orders.ts",
+      "line": 42,
+      "rule": "typescript:S3649",
+      "message": "Use parameterized database queries instead of combining user input with SQL text."
+    },
+    {
+      "severity": "MAJOR",
+      "component": "src/auth/session.ts",
+      "line": 18,
+      "rule": "typescript:S5527",
+      "message": "Validate the certificate chain before accepting the connection."
+    }
+  ]
+}
